@@ -118,6 +118,13 @@ io.on('connection', (socket) => {
         io.to(roomId).emit('updateRoom', room);
     });
 
+    // Helper function to emit state without heavy base64 strings
+    const emitState = (roomId, room) => {
+        const payload = { ...room };
+        delete payload.images; // Omit massive base64 payload
+        io.to(roomId).emit('updateState', payload);
+    };
+
     socket.on('flipCard', ({ roomId, cardIndex }) => {
         const room = rooms[roomId];
         if (!room || room.state !== 'playing' || room.lockBoard) return;
@@ -132,7 +139,7 @@ io.on('connection', (socket) => {
         room.flippedCards.push(cardIndex);
 
         // Broadcast the flip immediately
-        io.to(roomId).emit('updateRoom', room);
+        emitState(roomId, room);
 
         // Check for match if 2 cards are flipped
         if (room.flippedCards.length === 2) {
@@ -170,7 +177,7 @@ io.on('connection', (socket) => {
                     }
 
                     // You keep your turn if you score!
-                    io.to(roomId).emit('updateRoom', room);
+                    emitState(roomId, room);
                 }, 1000); // 1s delay so players see the match
 
             } else {
@@ -179,7 +186,7 @@ io.on('connection', (socket) => {
                     room.flippedCards = [];
                     room.turnIndex = (room.turnIndex + 1) % room.players.length;
                     room.lockBoard = false;
-                    io.to(roomId).emit('updateRoom', room);
+                    emitState(roomId, room);
                 }, 1500); // 1.5s delay so players see what they missed
             }
         }

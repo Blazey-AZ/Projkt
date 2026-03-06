@@ -96,7 +96,12 @@ function renderCard(cardData, index, isFlipped, isMatched) {
     // Click to flip
     cardWrap.addEventListener('click', () => {
         // Rely on server validation, but locally check if it's our turn to prevent spam
-        if (isMyTurn && !isMatched && !isFlipped) {
+        if (isMyTurn && !isMatched && !isFlipped && currentRoom.flippedCards.length < 2) {
+            // Optimistic UI: flip immediately before round trip
+            cardWrap.classList.add('flipped');
+            isFlipped = true;
+            currentRoom.flippedCards.push(index); // locally track it to prevent double clicking
+
             socket.emit('flipCard', { roomId: currentRoom.id, cardIndex: index });
         }
     });
@@ -276,6 +281,16 @@ socket.on('updateRoom', (room) => {
         // Game is active
         showView('game');
         updateGameBoard(room);
+    }
+});
+
+// Efficient state updates during gameplay (avoids resending images)
+socket.on('updateState', (state) => {
+    if (currentRoom) {
+        Object.assign(currentRoom, state);
+        if (currentRoom.state !== 'game_over') {
+            updateGameBoard(currentRoom);
+        }
     }
 });
 
