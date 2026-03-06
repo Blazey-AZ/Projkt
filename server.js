@@ -12,13 +12,22 @@ app.use(express.static('public'));
 
 const rooms = {};
 
+// Predefined images for Default Mode (using high-quality abstract colorful images)
+const DEFAULT_IMAGES = [
+    'nannu.jpg', // Gradient 1
+    'pixnova-f39cd205dbe9068f23d172fc302eef7e.png', // Gradient 2
+    'nannu3.png', // Gradient 3
+    'image.png', // Gradient 4
+    'gumaaro.jpg'  // Gradient 5
+];
+
 // Helper to sanitize room names
 const sanitize = (str) => str.replace(/[^a-zA-Z0-9]/g, '').substring(0, 10);
 
 io.on('connection', (socket) => {
     console.log('A user connected:', socket.id);
 
-    socket.on('createRoom', ({ roomId, playerName }, callback) => {
+    socket.on('createRoom', ({ roomId, playerName, gameMode }, callback) => {
         roomId = sanitize(roomId);
         if (rooms[roomId]) {
             callback({ success: false, message: 'Room already exists' });
@@ -29,6 +38,7 @@ io.on('connection', (socket) => {
             id: roomId,
             players: [{ id: socket.id, name: playerName, isHost: true, score: 0 }],
             gameStarted: false,
+            gameMode: gameMode || 'default',
             board: [],
             flippedCards: [], // indices of currently flipped cards
             lockBoard: false, // prevent flipping when resolving a turn
@@ -37,6 +47,11 @@ io.on('connection', (socket) => {
             state: 'waiting',
             totalMatches: 0
         };
+
+        // Auto-assign images if default mode
+        if (rooms[roomId].gameMode === 'default') {
+            rooms[roomId].images = DEFAULT_IMAGES;
+        }
 
         socket.join(roomId);
         callback({ success: true });
@@ -81,6 +96,8 @@ io.on('connection', (socket) => {
     socket.on('startGame', (roomId) => {
         const room = rooms[roomId];
         if (!room || room.players[0].id !== socket.id) return;
+
+        // Final check: if custom mode, must have images. If default, they are already there.
         if (room.images.length === 0) {
             socket.emit('error', 'Must upload tiles first');
             return;

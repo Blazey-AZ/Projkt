@@ -65,7 +65,7 @@ function showView(viewId) {
     views[viewId].classList.remove('hidden');
 }
 
-function updatePlayersList(players) {
+function updatePlayersList(players, gameMode) {
     els.playersList.innerHTML = '';
     els.playerCount.innerText = players.length;
 
@@ -75,6 +75,17 @@ function updatePlayersList(players) {
         if (p.id === socket.id && p.isHost) {
             els.hostControls.classList.remove('hidden');
             els.guestMessage.classList.add('hidden');
+
+            // Handle Mode Visibility
+            const uploadSection = document.querySelector('.upload-section');
+            if (gameMode === 'default') {
+                uploadSection.classList.add('hidden');
+                els.btnStart.disabled = false;
+            } else {
+                uploadSection.classList.remove('hidden');
+                // If switching back to custom, check if we already have tiles
+                els.btnStart.disabled = (customTiles.length === 0);
+            }
         }
         els.playersList.appendChild(li);
     });
@@ -182,9 +193,12 @@ function updateGameBoard(room) {
 els.btnCreate.addEventListener('click', () => {
     const name = els.playerName.value.trim();
     const roomId = els.roomId.value.trim();
+    const modeEl = document.querySelector('input[name="game-mode"]:checked');
+    const gameMode = modeEl ? modeEl.value : 'default';
+
     if (!name || !roomId) return alert('Name and Room ID required');
 
-    socket.emit('createRoom', { roomId, playerName: name }, (res) => {
+    socket.emit('createRoom', { roomId, playerName: name, gameMode }, (res) => {
         if (res.success) {
             els.nameDisplay.innerText = name;
             els.roomDisplay.innerText = roomId;
@@ -338,7 +352,7 @@ socket.on('updateRoom', (room) => {
     currentRoom = room;
 
     if (room.state === 'waiting') {
-        updatePlayersList(room.players);
+        updatePlayersList(room.players, room.gameMode);
     } else if (room.state !== 'game_over') {
         // Game is active
         showView('game');
