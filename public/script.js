@@ -26,6 +26,11 @@ const els = {
     roomDisplay: document.getElementById('room-id-display'),
     btnLeave: document.getElementById('btn-leave'),
 
+    // Audio Controls
+    btnMute: document.getElementById('btn-mute'),
+    volumeSlider: document.getElementById('volume-slider'),
+    bgMusic: document.getElementById('bg-music'),
+
     // Game elements
     matchBoard: document.getElementById('match-board'),
     turnIndicator: document.getElementById('turn-indicator'),
@@ -48,6 +53,10 @@ let myId = null;
 let currentRoom = null;
 let customTiles = []; // Base64 strings of uploaded images
 let isMyTurn = false;
+let isMuted = false;
+
+// Initialize Audio
+els.bgMusic.volume = els.volumeSlider.value;
 
 // --- Helper Functions ---
 
@@ -213,6 +222,32 @@ els.btnLeave.addEventListener('click', () => {
     }
 });
 
+// Audio Controls
+els.btnMute.addEventListener('click', () => {
+    isMuted = !isMuted;
+    els.bgMusic.muted = isMuted;
+    els.btnMute.innerText = isMuted ? '🔇' : '🔊';
+});
+
+els.volumeSlider.addEventListener('input', (e) => {
+    els.bgMusic.volume = e.target.value;
+    if (isMuted && e.target.value > 0) {
+        isMuted = false;
+        els.bgMusic.muted = false;
+        els.btnMute.innerText = '🔊';
+    }
+});
+
+// Function to try autoplaying music (browsers often block this until interaction)
+const tryPlayMusic = () => {
+    if (els.bgMusic.paused) {
+        els.bgMusic.play().catch(e => console.log("Waiting for user interaction to play audio.", e));
+    }
+};
+
+// Add interaction listeners to start music on first click if blocked
+document.body.addEventListener('click', tryPlayMusic, { once: true });
+
 // Image Upload Handling (Host Only)
 els.tileUpload.addEventListener('change', (e) => {
     const files = Array.from(e.target.files);
@@ -237,19 +272,46 @@ els.tileUpload.addEventListener('change', (e) => {
     files.forEach(file => {
         const reader = new FileReader();
         reader.onload = (event) => {
-            const base64 = event.target.result;
-            customTiles.push(base64);
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const MAX_SIZE = 300; // Small size perfect for game tiles
+                let width = img.width;
+                let height = img.height;
 
-            // Show preview
-            const img = document.createElement('img');
-            img.src = base64;
-            img.className = 'preview-img';
-            els.previewContainer.appendChild(img);
+                if (width > height) {
+                    if (width > MAX_SIZE) {
+                        height *= MAX_SIZE / width;
+                        width = MAX_SIZE;
+                    }
+                } else {
+                    if (height > MAX_SIZE) {
+                        width *= MAX_SIZE / height;
+                        height = MAX_SIZE;
+                    }
+                }
 
-            loadedCount++;
-            if (loadedCount === files.length) {
-                els.btnUpload.disabled = false;
-            }
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                // Compress as JPEG
+                const compressedBase64 = canvas.toDataURL('image/jpeg', 0.8);
+                customTiles.push(compressedBase64);
+
+                // Show preview
+                const previewImg = document.createElement('img');
+                previewImg.src = compressedBase64;
+                previewImg.className = 'preview-img';
+                els.previewContainer.appendChild(previewImg);
+
+                loadedCount++;
+                if (loadedCount === files.length) {
+                    els.btnUpload.disabled = false;
+                }
+            };
+            img.src = event.target.result;
         };
         reader.readAsDataURL(file);
     });

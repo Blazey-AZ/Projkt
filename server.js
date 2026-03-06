@@ -115,15 +115,15 @@ io.on('connection', (socket) => {
         room.players.forEach(p => p.score = 0);
 
         io.to(roomId).emit('gameStarted');
-        io.to(roomId).emit('updateRoom', room);
+        emitState(roomId, room);
     });
 
     // Helper function to emit state without heavy base64 strings
-    const emitState = (roomId, room) => {
+    function emitState(roomId, room) {
         const payload = { ...room };
         delete payload.images; // Omit massive base64 payload
         io.to(roomId).emit('updateState', payload);
-    };
+    }
 
     socket.on('flipCard', ({ roomId, cardIndex }) => {
         const room = rooms[roomId];

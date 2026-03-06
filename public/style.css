@@ -194,6 +194,43 @@ input:focus {
     margin-left: 1rem;
 }
 
+.icon-btn {
+    padding: 0.5rem;
+    font-size: 1.2rem;
+    line-height: 1;
+    background: transparent;
+    border: 1px solid var(--glass-border);
+}
+
+.audio-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-right: auto;
+    margin-left: 2rem;
+}
+
+.volume-slider {
+    width: 80px;
+    height: 4px;
+    background: var(--glass-border);
+    border: none;
+    appearance: none;
+    -webkit-appearance: none;
+    border-radius: 4px;
+    outline: none;
+    padding: 0;
+}
+
+.volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--primary);
+    cursor: pointer;
+}
+
 .banner-container {
     display: flex;
     align-items: center;
