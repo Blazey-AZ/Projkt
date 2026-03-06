@@ -73,8 +73,8 @@ io.on('connection', (socket) => {
         if (!room) return;
         if (room.players[0].id !== socket.id) return;
 
-        // store base64 string
-        room.images = tileDataArray;
+        // store base64 string, max 5
+        room.images = tileDataArray.slice(0, 5);
         io.to(roomId).emit('updateRoom', room);
     });
 
@@ -185,19 +185,26 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('disconnect', () => {
-        console.log('User disconnected:', socket.id);
+    const handlePlayerLeave = (socketId) => {
         for (const roomId in rooms) {
             const room = rooms[roomId];
-            const playerIndex = room.players.findIndex(p => p.id === socket.id);
+            const playerIndex = room.players.findIndex(p => p.id === socketId);
             if (playerIndex !== -1) {
+                // If they leave, remove from players array
                 room.players.splice(playerIndex, 1);
-                io.to(roomId).emit('updateRoom', room);
+
+                // Have the socket physically leave the socket.io room
+                const targetSocket = io.sockets.sockets.get(socketId);
+                if (targetSocket) {
+                    targetSocket.leave(roomId);
+                }
+
                 if (room.players.length === 0) {
                     delete rooms[roomId];
-                } else if (playerIndex === 0) {
-                    room.players[0].isHost = true;
-                    // if host left during a game, turn index might be out of bounds
+                } else {
+                    if (playerIndex === 0) {
+                        room.players[0].isHost = true;
+                    }
                     if (room.turnIndex >= room.players.length) {
                         room.turnIndex = 0;
                     }
@@ -206,6 +213,15 @@ io.on('connection', (socket) => {
                 break;
             }
         }
+    };
+
+    socket.on('leaveRoom', () => {
+        handlePlayerLeave(socket.id);
+    });
+
+    socket.on('disconnect', () => {
+        console.log('User disconnected:', socket.id);
+        handlePlayerLeave(socket.id);
     });
 });
 

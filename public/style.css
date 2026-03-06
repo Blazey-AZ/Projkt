@@ -19,15 +19,28 @@
 
 body {
     font-family: 'Outfit', sans-serif;
-    background-color: var(--bg-color);
-    background-image:
-        radial-gradient(at 0% 0%, rgba(244, 63, 94, 0.15) 0px, transparent 50%),
-        radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.1) 0px, transparent 50%);
+    background: linear-gradient(-45deg, #0f172a, #1a0033, #0f172a, #260026);
+    background-size: 400% 400%;
+    animation: gradientBG 15s ease infinite;
     color: var(--text-color);
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     overflow-x: hidden;
+}
+
+@keyframes gradientBG {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
 }
 
 .hidden {
@@ -40,13 +53,18 @@ body {
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--glass-border);
-    padding: 1rem 2rem;
+    padding: clamp(0.5rem, 2vw, 1rem) clamp(1rem, 4vw, 2rem);
     display: flex;
     justify-content: space-between;
     align-items: center;
     position: sticky;
     top: 0;
     z-index: 10;
+}
+
+.glass-header h1 {
+    font-size: clamp(1.2rem, 4vw, 2rem);
+    margin: 0;
 }
 
 .glass-panel,
@@ -170,6 +188,17 @@ input:focus {
     background-color: #059669;
 }
 
+.small-btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+    margin-left: 1rem;
+}
+
+.banner-container {
+    display: flex;
+    align-items: center;
+}
+
 .giant-btn {
     width: 100%;
     background-color: var(--success);
@@ -219,6 +248,13 @@ input:focus {
     border: 1px solid var(--glass-border);
 }
 
+.error-message {
+    color: var(--danger);
+    font-weight: bold;
+    margin: 0.5rem 0;
+    font-size: 0.9rem;
+}
+
 /* Game Board */
 #game-board {
     display: flex;
@@ -243,9 +279,9 @@ input:focus {
 .player-stat {
     position: absolute;
     background: var(--glass-bg);
-    padding: 0.75rem 1.5rem;
+    padding: clamp(0.2rem, 1vw, 0.75rem) clamp(0.5rem, 2vw, 1.5rem);
     border-radius: 12px;
-    font-size: 1rem;
+    font-size: clamp(0.7rem, 2.5vw, 1rem);
     font-weight: bold;
     border: 1px solid var(--glass-border);
     backdrop-filter: blur(8px);
@@ -255,29 +291,28 @@ input:focus {
 
 .player-stat span {
     color: var(--primary);
-    font-size: 1.25rem;
+    font-size: clamp(0.9rem, 3vw, 1.25rem);
 }
 
+/* Adjust opponent positions on Mobile to prevent overlap */
 .opp-top {
-    top: 20px;
+    top: 10px;
     left: 50%;
     transform: translateX(-50%);
 }
 
 .opp-left {
-    top: 50%;
-    left: 20px;
-    transform: translateY(-50%);
+    top: 30px;
+    left: 10px;
 }
 
 .opp-right {
-    top: 50%;
-    right: 20px;
-    transform: translateY(-50%);
+    top: 30px;
+    right: 10px;
 }
 
 .my-stat {
-    bottom: 20px;
+    bottom: 10px;
     left: 50%;
     transform: translateX(-50%);
     border-color: var(--primary);
@@ -291,19 +326,24 @@ input:focus {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    margin: 60px 0;
+    margin: 0;
+    padding: 1rem 0 60px 0;
+    /* Space for my-stat at bottom */
+    width: 100%;
 }
 
 .turn-indicator {
-    font-size: 1.5rem;
+    font-size: clamp(1rem, 4vw, 1.5rem);
     font-weight: bold;
-    margin-bottom: 2rem;
+    margin-bottom: clamp(0.5rem, 2vw, 1.5rem);
     background: var(--glass-bg);
-    padding: 0.75rem 2rem;
+    padding: clamp(0.5rem, 1vw, 0.75rem) clamp(1rem, 3vw, 2rem);
     border-radius: 30px;
     border: 1px solid var(--glass-border);
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
     transition: all 0.3s ease;
+    z-index: 6;
+    /* stay above grid */
 }
 
 .turn-indicator.active {
@@ -316,17 +356,26 @@ input:focus {
 
 .tile-grid {
     display: grid;
-    /* Responsive grid with min/max auto fitting */
-    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
-    gap: 12px;
+    /* Determine column counts based on smallest safe relative unit vh/vw so it auto-shrinks cards */
+    grid-template-columns: repeat(auto-fit, minmax(clamp(45px, min(12vw, 10vh), 100px), 1fr));
+    gap: clamp(4px, 2vw, 12px);
     justify-content: center;
-    max-width: 90%;
-    width: 600px;
-    padding: 2rem;
-    background: rgba(0, 0, 0, 0.2);
+    align-content: center;
+    max-width: 95%;
+    width: 100%;
+    /* Take full available width relative to max-width */
+    max-width: 600px;
+    /* Height is now height: auto to prevent the grid background from popping out and clipping tiles */
+    height: auto;
+    min-height: 40vh;
+    padding: clamp(0.5rem, 2vw, 2rem) clamp(0.5rem, 2vw, 2rem);
+    /* Dynamic moving internal background using gradient */
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.4), rgba(15, 23, 42, 0.8));
+    background-size: 200% 200%;
+    animation: gradientBG 6s ease infinite;
     border-radius: 16px;
     border: 1px solid var(--glass-border);
-    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5), 0 10px 30px rgba(0, 0, 0, 0.3);
     perspective: 1000px;
     /* Crucial for 3D flip */
 }
@@ -335,6 +384,9 @@ input:focus {
 .card {
     width: 100%;
     aspect-ratio: 3/4;
+    /* Let the card figure out its size constraints inside the grid cell */
+    max-height: 100%;
+    margin: 0 auto;
     background-color: transparent;
     cursor: pointer;
     border-radius: 8px;
@@ -432,6 +484,7 @@ input:focus {
     margin-bottom: 1rem;
     background: -webkit-linear-gradient(45deg, var(--primary), var(--success));
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 

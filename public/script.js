@@ -24,6 +24,7 @@ const els = {
     playerBanner: document.getElementById('player-banner'),
     nameDisplay: document.getElementById('player-name-display'),
     roomDisplay: document.getElementById('room-id-display'),
+    btnLeave: document.getElementById('btn-leave'),
 
     // Game elements
     matchBoard: document.getElementById('match-board'),
@@ -198,14 +199,31 @@ els.btnJoin.addEventListener('click', () => {
     });
 });
 
+els.btnLeave.addEventListener('click', () => {
+    if (currentRoom) {
+        socket.emit('leaveRoom', currentRoom.id);
+        currentRoom = null;
+        els.playerBanner.classList.add('hidden');
+        showView('lobby');
+    }
+});
+
 // Image Upload Handling (Host Only)
 els.tileUpload.addEventListener('change', (e) => {
     const files = Array.from(e.target.files);
+    const errorEl = document.getElementById('upload-error');
     els.previewContainer.innerHTML = '';
     customTiles = [];
+    errorEl.classList.add('hidden');
+    els.btnUpload.disabled = true;
 
     if (files.length === 0) {
-        els.btnUpload.disabled = true;
+        return;
+    }
+
+    if (files.length > 5) {
+        errorEl.innerText = "Please select a maximum of 5 images.";
+        errorEl.classList.remove('hidden');
         return;
     }
 

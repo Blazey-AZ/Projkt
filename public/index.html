@@ -17,8 +17,9 @@
         <!-- Header -->
         <header class="glass-header">
             <h1>Match <span class="highlight">The Tile</span></h1>
-            <div id="player-banner" class="hidden">
-                <span id="player-name-display"></span> | Room: <span id="room-id-display"></span>
+            <div id="player-banner" class="hidden banner-container">
+                <span><span id="player-name-display"></span> | Room: <span id="room-id-display"></span></span>
+                <button id="btn-leave" class="btn secondary small-btn">Leave</button>
             </div>
         </header>
 
@@ -47,12 +48,13 @@
                 <div id="host-controls" class="hidden">
                     <div class="upload-section">
                         <h3>Upload Custom Tiles</h3>
-                        <p class="subtitle">Select images to act as your pairs. The game will generate a memory board
-                            with these images.</p>
+                        <p class="subtitle">Select exactly 5 images to act as your pairs. The game will generate a
+                            memory board with these images.</p>
                         <label for="tile-upload" class="upload-label">
-                            Choose Images (Multiple)
+                            Choose Images (Max 5)
                         </label>
                         <input type="file" id="tile-upload" multiple accept="image/*" class="hidden" />
+                        <div id="upload-error" class="error-message hidden"></div>
                         <div id="preview-container"></div>
                         <button id="btn-upload" class="btn primary" disabled>Upload and Ready</button>
                     </div>
